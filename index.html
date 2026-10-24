@@ -1,11 +1,373 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hello World DevOps</title>
+    <style>
+        :root {
+            --bg: #101418;
+            --panel: #0f1419;
+            --panel-2: #181d24;
+            --header: #1b2129;
+            --tab: #1a1f28;
+            --tab-active: #1f262d;
+            --border: #2b3139;
+            --text: #dfe6ef;
+            --muted: #a7b0bb;
+            --dim: #7d8390;
+            --cursor: #c8d0d8;
+            --scroll: #7c8187;
+            --prompt: #dfe6ef;
+            --accent: #4c9dff;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            height: 100%;
+            background: #0a0d11;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+        }
+
+        body {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 22px;
+        }
+
+        .terminal-window {
+            width: 100%;
+            max-width: 1200px;
+            height: 620px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.02);
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--header);
+            border-bottom: 1px solid var(--border);
+            padding: 0 10px 0 0;
+        }
+
+        .tabs {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            gap: 8px;
+            padding-left: 12px;
+        }
+
+        .tab {
+            height: 100%;
+            padding: 0 18px;
+            display: flex;
+            align-items: center;
+            color: var(--muted);
+            font-size: 14px;
+            border-top: 1px solid transparent;
+            border-right: 1px solid transparent;
+            background: transparent;
+        }
+
+        .tab.active {
+            background: var(--tab-active);
+            color: var(--text);
+            border-top: 1px solid var(--border);
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid transparent;
+            margin-top: 1px;
+            position: relative;
+        }
+
+        .tab.active::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 1px;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .terminal-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding-right: 14px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .action-icons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            color: var(--dim);
+        }
+
+        .icon {
+            width: 14px;
+            height: 14px;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 2px;
+            opacity: 0.9;
+            display: inline-block;
+            position: relative;
+        }
+
+        .icon.copy { border-color: rgba(255,255,255,0.2); }
+        .icon.copy::before {
+            content: "";
+            position: absolute;
+            left: 3px; top: 3px;
+            width: 6px; height: 7px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: transparent;
+        }
+
+        .icon.copy::after {
+            content: "";
+            position: absolute;
+            right: 3px; bottom: 3px;
+            width: 6px; height: 7px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .icon.plus {
+            width: 12px; height: 12px;
+            border: none;
+        }
+        .icon.plus::before, .icon.plus::after {
+            content: "";
+            position: absolute;
+            background: rgba(255,255,255,0.7);
+            left: 50%; top: 50%; transform: translate(-50%, -50%);
+        }
+        .icon.plus::before { width: 12px; height: 1.5px; }
+        .icon.plus::after { width: 1.5px; height: 12px; }
+
+        .icon.split {
+            border: none;
+            width: 18px; height: 12px;
+        }
+        .icon.split::before {
+            content: "";
+            position: absolute;
+            inset: 2px 0 2px 0;
+            background: linear-gradient(to right, rgba(255,255,255,0.72) 0 50%, rgba(255,255,255,0.72) 50% 100%);
+            clip-path: polygon(0 0, 100% 0, 100% 20%, 0 20%, 0 80%, 100% 80%, 100% 100%, 0 100%);
+            opacity: 0.7;
+        }
+
+        .icon.trash {
+            border: none;
+            width: 16px; height: 16px;
+        }
+        .icon.trash::before {
+            content: "";
+            position: absolute;
+            left: 3px; right: 3px; top: 3px; bottom: 2px;
+            border: 1.5px solid rgba(255,255,255,0.75);
+            border-top: none;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 86% 100%, 86% 22%, 14% 22%, 14% 100%, 0 100%);
+        }
+        .icon.trash::after {
+            content: "";
+            position: absolute;
+            left: 6px; right: 6px; top: 0;
+            height: 3px;
+            background: rgba(255,255,255,0.75);
+            border-radius: 1px;
+        }
+
+        .terminal-body {
+            position: relative;
+            height: calc(100% - 52px);
+            background: linear-gradient(180deg, rgba(16,20,24,0.95), rgba(15,20,25,0.98));
+            padding: 18px 18px 12px 18px;
+        }
+
+        .terminal-grid {
+            display: grid;
+            grid-template-columns: 170px minmax(0, 1fr);
+            row-gap: 10px;
+            column-gap: 18px;
+            width: 530px;
+            margin-top: 10px;
+            margin-left: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text);
+        }
+
+        .label {
+            color: #dce3ec;
+            font-weight: 500;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .value {
+            color: #d9e0e8;
+            font-weight: 400;
+            white-space: nowrap;
+        }
+
+        .value.false {
+            color: #dfe6ef;
+        }
+
+        .value.true {
+            color: #dfe6ef;
+        }
+
+        .terminal-line {
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            color: var(--text);
+            background: rgba(0,0,0,0.03);
+            padding: 2px 0;
+        }
+
+        .prompt {
+            color: var(--prompt);
+            font-weight: 500;
+        }
+
+        .path {
+            color: #dfe4ea;
+            font-weight: 500;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 11px;
+            height: 21px;
+            background: var(--cursor);
+            animation: blink 1s steps(1) infinite;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        .scrollbar {
+            position: absolute;
+            right: 6px;
+            top: 24px;
+            width: 18px;
+            height: calc(100% - 38px);
+            border-left: 1px solid rgba(255,255,255,0.06);
+            pointer-events: none;
+        }
+
+        .scrollbar::before {
+            content: "";
+            position: absolute;
+            right: 3px;
+            top: 30px;
+            width: 10px;
+            height: 120px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .scrollbar::after {
+            content: "";
+            position: absolute;
+            right: 6px;
+            top: 122px;
+            width: 6px;
+            height: 22px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.36);
+        }
+
+        @media (max-width: 900px) {
+            .terminal-window {
+                height: 540px;
+            }
+
+            .terminal-grid {
+                grid-template-columns: 150px minmax(0, 1fr);
+                width: 100%;
+                max-width: 480px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello World!</h1>
-    <p>My first DevOps project using Git, Jenkins and AWS.</p>
+    <div class="terminal-window" role="img" aria-label="Dark terminal window showing network diagnostics output.">
+        <div class="terminal-header">
+            <div class="tabs">
+                <div class="tab">Problems</div>
+                <div class="tab">Output</div>
+                <div class="tab">Debug Console</div>
+                <div class="tab active">Terminal</div>
+                <div class="tab">Ports</div>
+            </div>
+
+            <div class="terminal-actions">
+                <div class="action-icons">
+                    <span class="icon copy" aria-hidden="true"></span>
+                    <span class="icon plus" aria-hidden="true"></span>
+                    <span class="icon split" aria-hidden="true"></span>
+                    <span class="icon trash" aria-hidden="true"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="terminal-body">
+            <div class="terminal-grid">
+                <div class="label">RemoteAddress</div>
+                <div class="value">: 40.192.2.47</div>
+
+                <div class="label">RemotePort</div>
+                <div class="value">: 22</div>
+
+                <div class="label">InterfaceAlias</div>
+                <div class="value">: WiFi</div>
+
+                <div class="label">SourceAddress</div>
+                <div class="value">: 192.168.0.113</div>
+
+                <div class="label">PingSucceeded</div>
+                <div class="value false">: False</div>
+
+                <div class="label">PingReplyDetails</div>
+                <div class="value">: (RTT) : 0 ms</div>
+
+                <div class="label">TcpTestSucceeded</div>
+                <div class="value true">: True</div>
+            </div>
+
+            <div class="terminal-line">
+                <span class="prompt">PS</span>
+                <span class="path">E:\New folder\Hello-World-Devops&gt;</span>
+                <span class="cursor" aria-hidden="true"></span>
+            </div>
+
+            <div class="scrollbar" aria-hidden="true"></div>
+        </div>
+    </div>
 </body>
 </html>
